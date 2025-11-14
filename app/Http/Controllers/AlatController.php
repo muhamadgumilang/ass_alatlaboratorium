@@ -1,65 +1,62 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Alat;
+use App\Models\KategoriAlat;
 use Illuminate\Http\Request;
 
 class AlatController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $alat = Alat::with('kategori')->get();
+        return view('alat.index', compact('alat'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $kategori = KategoriAlat::all();
+        return view('alat.create', compact('kategori'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nama_alat'   => 'required|string|max:255',
+            'stok'        => 'required|integer',
+            'kategori_id' => 'required',
+        ]);
+
+        Alat::create($request->all());
+        return redirect()->route('alat.index')->with('success', 'Alat berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Alat $alat)
     {
-        //
+        return view('alat.show', compact('alat'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Alat $alat)
     {
-        //
+        $kategori = KategoriAlat::all();
+        return view('alat.edit', compact('alat', 'kategori'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Alat $alat)
     {
-        //
+        $request->validate([
+            'nama_alat'   => 'required|string|max:255',
+            'stok'        => 'required|integer',
+            'kategori_id' => 'required',
+        ]);
+
+        $alat->update($request->all());
+        return redirect()->route('alat.index')->with('success', 'Alat berhasil diperbarui!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Alat $alat)
     {
-        //
+        $alat->delete();
+        return redirect()->route('alat.index')->with('success', 'Alat berhasil dihapus!');
     }
 }

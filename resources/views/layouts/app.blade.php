@@ -1,3 +1,40 @@
+<style>
+    body {
+        background-color: #f3f6fa; /* abu muda elegan */
+    }
+
+    .navbar {
+        background: linear-gradient(90deg, #0d6efd, #3b8dff) !important; /* biru gradasi */
+    }
+
+    .navbar-brand, 
+    .nav-link, 
+    #navbarDropdown {
+        color: white !important;
+        font-weight: 600;
+    }
+
+    .navbar-nav .nav-link:hover {
+        color: #dce9ff !important;
+    }
+
+    .dropdown-menu {
+        border-radius: 10px;
+    }
+
+    .dropdown-item:hover {
+        background-color: #e7f1ff;
+    }
+
+    main {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-top: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+</style>
+
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>

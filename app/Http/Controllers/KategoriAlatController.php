@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 class KategoriAlatController extends Controller
 {
+
     public function index()
     {
         $kategori = KategoriAlat::all();
@@ -31,6 +32,12 @@ class KategoriAlatController extends Controller
     {
         return view('kategori.edit', compact('kategori'));
     }
+
+    public function show(KategoriAlat $kategori)
+{
+    return view('kategori.show', compact('kategori'));
+}
+
 
     public function update(Request $request, KategoriAlat $kategori)
     {

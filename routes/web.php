@@ -15,3 +15,6 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 use App\Http\Controllers\KategoriAlatController;
 
 Route::resource('kategori', KategoriAlatController::class);
+
+use App\Http\Controllers\AlatController;
+Route::resource('alat', AlatController::class);
