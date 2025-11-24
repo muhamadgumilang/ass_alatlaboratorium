@@ -1,7 +1,7 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('content')
-<div class="container">
+<div class="container ">
     <h1>Tambah Kategori Alat</h1>
 
     <form action="{{ route('kategori.store') }}" method="POST">
