@@ -8,7 +8,7 @@ class Peminjaman extends Model
 {
     use HasFactory;
 
-    protected $table = 'peminjaman'; // <== WAJIB DITAMBAHKAN
+    protected $table = 'peminjaman';
 
     protected $fillable = [
         'kode_pinjam',
@@ -17,15 +17,25 @@ class Peminjaman extends Model
         'user_id',
     ];
 
-    public function alat()
+    public function user()
     {
-        return $this->belongsToMany(Alat::class, 'detail_peminjaman')
-            ->withPivot('jumlah')
-            ->withTimestamps();
+        return $this->belongsTo(User::class);
     }
 
-    public function admin()
+    public function items()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->hasMany(PeminjamanAlat::class, 'peminjaman_id');
+    }
+
+    public function alats()
+    {
+        return $this->belongsToMany(
+            Alat::class,
+            'peminjaman_alat',
+            'peminjaman_id',
+            'alat_id'
+        )
+            ->withPivot('jumlah')
+            ->withTimestamps();
     }
 }

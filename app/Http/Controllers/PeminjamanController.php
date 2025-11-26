@@ -1,118 +1,124 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Alat;
 use App\Models\Peminjaman;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class PeminjamanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     // Generate kode otomatis
     private function generateKode()
     {
-        $last = Peminjaman::latest()->first();
+        $last = Peminjaman::orderBy('id', 'DESC')->first();
+
         $next = $last ? ((int) substr($last->kode_pinjam, 3)) + 1 : 1;
 
-        return 'PN-' . str_pad($next, 4, '0', STR_PAD_LEFT);
+        return 'TRX-'.strtoupper(uniqid());
     }
 
     public function index()
     {
-        $alat = Alat::all();
-        $data = Peminjaman::with(['alat'])->latest()->get();
+        $peminjaman = Peminjaman::with('alats')->get();
 
-        return view('peminjaman.index', compact('data'));
+        return view('peminjaman.index', compact('peminjaman'));
     }
 
     public function create()
     {
+        $last = Peminjaman::orderBy('id', 'desc')->first();
+        $next = $last ? intval(substr($last->kode_pinjam, 3)) + 1 : 1;
+
+        $kode_otomatis = 'TRX-'.strtoupper(uniqid());
+
         $alat = Alat::all();
 
-        return view('peminjaman.create', [
-            'kode' => $this->generateKode(),
-            'alat' => $alat,
-        ]);
+        return view('peminjaman.create', compact('kode_otomatis', 'alat'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'tanggal_pinjam'  => 'required|date',
-            'tanggal_kembali' => 'required|date|after:tanggal_pinjam',
-            'alat'            => 'required|array',
-            'kode'            => 'required|unique:peminjaman,kode_pinjam',
-            'items'           => 'required|array',
-            
-
+            'tanggal_pinjam' => 'required|date',
+            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam',
+            'items' => 'required|array',
+            'items.*.alat_id' => 'required|exists:alats,id',
+            'items.*.jumlah' => 'nullable|integer|min:1',
         ]);
 
-        $kode_pinjam = 'PIN-' . time();
+        $last = Peminjaman::orderBy('id', 'desc')->first();
+        $next = $last ? intval(substr($last->kode_pinjam, 3)) + 1 : 1;
+        $kode_pinjam = 'TRX-'.strtoupper(uniqid());
 
-        // Save header
         $peminjaman = Peminjaman::create([
-            'kode_pinjam'     => $request->kode_pinjam,
-            'tanggal_pinjam'  => $request->tanggal_pinjam,
+            'kode_pinjam' => $kode_pinjam,
+            'tanggal_pinjam' => $request->tanggal_pinjam,
             'tanggal_kembali' => $request->tanggal_kembali,
-            'user_id'         => Auth::id(),
+            'user_id' => auth()->id(),
         ]);
 
-        // Save detail
         foreach ($request->items as $item) {
-            if (! isset($item['alat_id'])) {
-                continue;
-            }
-
-            $peminjaman->alat()->attach($item['alat_id'], [
+            $peminjaman->alats()->attach($item['alat_id'], [
                 'jumlah' => $item['jumlah'] ?? 1,
             ]);
         }
 
-        return redirect()->route('peminjaman.index')->with('success', 'Peminjaman berhasil dibuat.');
+        return redirect()->route('peminjaman.index')
+                         ->with('success', 'Data berhasil disimpan');
     }
 
-    public function edit(Peminjaman $peminjaman)
+    public function edit($id)
     {
+        $peminjaman = Peminjaman::with('alats')->findOrFail($id);
         $alat = Alat::all();
 
         return view('peminjaman.edit', compact('peminjaman', 'alat'));
     }
 
-    public function update(Request $request, Peminjaman $peminjaman)
+    public function show($id)
+    {
+        $peminjaman = Peminjaman::with('alats')->findOrFail($id);
+
+        return view('peminjaman.show', compact('peminjaman'));
+    }
+
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'tanggal_pinjam'  => 'required',
-            'tanggal_kembali' => 'required',
-            'items'           => 'required|array',
+            'tanggal_pinjam' => 'required|date',
+            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam',
+            'items' => 'required|array',
+            'items.*.alat_id' => 'required|exists:alats,id',
+            'items.*.jumlah' => 'required|integer|min:1',
         ]);
 
-        // Update header
-        $peminjaman->update([
-            'tanggal_pinjam'  => $request->tanggal_pinjam,
-            'tanggal_kembali' => $request->tanggal_kembali,
-        ]);
+        $peminjaman = Peminjaman::findOrFail($id);
+        $peminjaman->tanggal_pinjam = $request->tanggal_pinjam;
+        $peminjaman->tanggal_kembali = $request->tanggal_kembali;
+        $peminjaman->save();
 
-        // Remove old detail
-        $peminjaman->alat()->detach();
-
-        // Save new detail
+        // Sync alat yang dipinjam dengan jumlahnya
+        $syncData = [];
         foreach ($request->items as $item) {
-            if (! isset($item['alat_id'])) {
-                continue;
-            }
-
-            $peminjaman->alat()->attach($item['alat_id'], [
-                'jumlah' => $item['jumlah'] ?? 1,
-            ]);
+            $syncData[$item['alat_id']] = ['jumlah' => $item['jumlah']];
         }
+        $peminjaman->alats()->sync($syncData);
 
-        return redirect()->route('peminjaman.index')->with('success', 'Peminjaman diperbarui.');
+        return redirect()->route('peminjaman.index')->with('success', 'Data peminjaman berhasil diupdate');
     }
 
     public function destroy(Peminjaman $peminjaman)
     {
+        $peminjaman->alats()->detach();
         $peminjaman->delete();
 
-        return redirect()->route('peminjaman.index')->with('success', 'Peminjaman dihapus.');
+        return redirect()->route('peminjaman.index')
+            ->with('success', 'Peminjaman dihapus.');
     }
 }

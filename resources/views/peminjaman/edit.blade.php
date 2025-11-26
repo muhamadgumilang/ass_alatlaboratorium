@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('content')
 <div class="container">
@@ -8,80 +8,67 @@
         @csrf
         @method('PUT')
 
-        <div class="card mb-3">
-            <div class="card-body">
-
-                <div class="mb-3">
-                    <label>Kode Peminjaman</label>
-                    <input type="text" class="form-control" value="{{ $peminjaman->kode_pinjam }}" readonly>
-                </div>
-
-                <div class="mb-3">
-                    <label>Tanggal Pinjam</label>
-                    <input type="date" name="tanggal_pinjam" class="form-control" value="{{ $peminjaman->tanggal_pinjam }}" required>
-                </div>
-
-                <div class="mb-3">
-                    <label>Tanggal Kembali</label>
-                    <input type="date" name="tanggal_kembali" class="form-control" value="{{ $peminjaman->tanggal_kembali }}" required>
-                </div>
-
-                <hr>
-
-                <h5>Alat yang Dipinjam</h5>
-
-                <table class="table" id="table-items">
-                    <thead>
-                        <tr>
-                            <th>Nama Alat</th>
-                            <th width="120">Jumlah</th>
-                            <th width="50">#</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php $i=0; @endphp
-                        @foreach($peminjaman->alat as $a)
-                        <tr>
-                            <td>
-                                <select name="items[{{ $i }}][alat_id]" class="form-control" required>
-                                    @foreach($alat as $al)
-                                    <option value="{{ $al->id }}" {{ $al->id == $a->id ? 'selected' : '' }}>
-                                        {{ $al->nama_alat }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </td>
-
-                            <td>
-                                <input type="number" name="items[{{ $i }}][jumlah]" class="form-control" value="{{ $a->pivot->jumlah }}" min="1">
-                            </td>
-
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                            </td>
-                        </tr>
-                        @php $i++; @endphp
-                        @endforeach
-                    </tbody>
-                </table>
-
-                <button type="button" id="add-row" class="btn btn-secondary mt-2">+ Tambah Baris</button>
-
-                <div class="mt-4">
-                    <button class="btn btn-primary">Update</button>
-                    <a href="{{ route('peminjaman.index') }}" class="btn btn-secondary">Kembali</a>
-                </div>
-
-            </div>
+        <div class="form-group">
+            <label>Kode Peminjaman</label>
+            <input type="text" name="kode_pinjam" value="{{ $peminjaman->kode_pinjam }}" readonly class="form-control">
         </div>
 
+        <div class="form-group">
+            <label>Tanggal Pinjam</label>
+            <input type="date" name="tanggal_pinjam" value="{{ $peminjaman->tanggal_pinjam }}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Tanggal Kembali</label>
+            <input type="date" name="tanggal_kembali" value="{{ $peminjaman->tanggal_kembali }}" class="form-control">
+        </div>
+
+        <h5>Alat yang Dipinjam</h5>
+        <table class="table" id="table-items">
+            <thead>
+                <tr>
+                    <th>Nama Alat</th>
+                    <th width="120">Jumlah</th>
+                    <th width="50">#</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($peminjaman->alats as $index => $item)
+                <tr>
+                    <td>
+                        <select name="items[{{ $index }}][alat_id]" class="form-control" required>
+                            <option value="">-- pilih alat --</option>
+                            @foreach($alat as $a)
+                            <option value="{{ $a->id }}" {{ $a->id == $item->id ? 'selected' : '' }}>
+                                {{ $a->nama_alat }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="items[{{ $index }}][jumlah]" value="{{ $item->pivot->jumlah }}" min="1" class="form-control" required>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <button type="button" id="add-row" class="btn btn-secondary mt-2">+ Tambah Baris</button>
+
+        <div class="mt-4">
+            <button class="btn btn-primary">Update</button>
+            <a href="{{ route('peminjaman.index') }}" class="btn btn-secondary">Kembali</a>
+        </div>
     </form>
 </div>
 
 <script>
     let index = {
         {
-            $i
+            $peminjaman - > alats - > count()
         }
     };
 
@@ -90,22 +77,20 @@
         <tr>
             <td>
                 <select name="items[${index}][alat_id]" class="form-control" required>
-                    @foreach($alat as $al)
-                    <option value="{{ $al->id }}">{{ $al->nama_alat }}</option>
+                    <option value="">-- pilih alat --</option>
+                    @foreach($alat as $a)
+                    <option value="{{ $a->id }}">{{ $a->nama_alat }}</option>
                     @endforeach
                 </select>
             </td>
-
             <td>
-                <input type="number" name="items[${index}][jumlah]" value="1" min="1" class="form-control">
+                <input type="number" name="items[${index}][jumlah]" value="1" min="1" class="form-control" required>
             </td>
-
             <td>
                 <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
             </td>
         </tr>
-    `;
-
+        `;
         document.querySelector('#table-items tbody').insertAdjacentHTML('beforeend', row);
         index++;
     });
@@ -117,5 +102,4 @@
     });
 
 </script>
-
 @endsection

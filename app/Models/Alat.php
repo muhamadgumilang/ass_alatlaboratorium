@@ -8,7 +8,7 @@ class Alat extends Model
 {
     use HasFactory;
 
-    protected $table    = 'alat';
+    protected $table    = 'alats';
     protected $fillable = [
         'nama_alat',
         'stok',

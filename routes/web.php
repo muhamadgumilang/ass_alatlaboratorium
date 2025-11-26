@@ -25,3 +25,7 @@ Route::resource('alat', AlatController::class);
 
 use App\Http\Controllers\PeminjamanController;
 Route::resource('peminjaman', PeminjamanController::class);
+
+use App\Http\Controllers\PeminjamanDetailController;
+Route::resource('/peminjaman_detail', PeminjamanDetailController::class);
+

@@ -25,6 +25,8 @@ class KategoriAlatController extends Controller
         ]);
 
         KategoriAlat::create($request->all());
+
+       
         return redirect()->route('kategori.index')->with('success', 'Kategori berhasil ditambahkan!');
     }
 
